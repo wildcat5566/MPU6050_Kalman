@@ -29,11 +29,13 @@ void setup() {
   delay(1000);
   digitalWrite(ExtResetPin, HIGH);
   
-  Serial.begin(115200);
+  Serial.begin(9600);
+
+  
   Wire.begin();
   mpu.initialize();
   mpu.setRate(400);
-  Serial.println(mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
+  //Serial.println(mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
 
   mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
   imu[0] = (ax - ax_offset) / acc_sen;
@@ -41,17 +43,22 @@ void setup() {
   imu[2] = (az - az_offset) / acc_sen;
   roll  = -atan2(imu[1], imu[2]) * RAD_TO_DEG;
   pitch = atan(imu[0] / sqrt(imu[1] * imu[1] + imu[2] * imu[2])) * RAD_TO_DEG;
-  Serial.print(roll); Serial.print("\t");
-  Serial.println(pitch);
-  Serial.println("=============Initial guesses=============");
+  //Serial.print(roll); Serial.print(", ");
+  //Serial.println(pitch);
+  //Serial.println("=============Initial guesses=============");
 
   // starting angle setting
   kalmanX.setAngle(roll);
   kalmanY.setAngle(pitch);
   timer = micros();
-}
 
+}
+int count = 0;
 void loop() {
+  while(Serial.available()){
+    Serial.read();
+  }
+  
   mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
   imu[0] = (ax - ax_offset) / acc_sen;
   imu[1] = (ay - ay_offset) / acc_sen;
@@ -73,9 +80,15 @@ void loop() {
   /*for(int i = 0; i < 6; i ++){
     Serial.print(imu[i]);   Serial.print(", ");
   }*/
-
-  Serial.print("Kalman(R/P):\t");
-  Serial.print(roll_kalman); Serial.print("\t");
-  Serial.println(pitch_kalman);
-
+  if(count==10){
+  //Serial.print("Kalman(R/P):\t");
+    /*Serial.print(",");
+    Serial.print(roll_kalman); Serial.print(",");
+    Serial.print(pitch_kalman); Serial.println(",");
+    Serial.flush();*/
+    
+    Serial.print("-003.45,-043.11,");
+    count = 0;
+  }
+  count++;
 }
